@@ -5,8 +5,9 @@ import numpy as np
 import open3d as o3d
 from PIL import Image
 
-# Import du modèle TripoSR
-from triposr.model import TripoSRModel  # à adapter selon le repo exact
+# Ajouter le repo local TripoSR
+sys.path.append(os.path.join(os.path.dirname(__file__), "TripoSR-main"))
+from model import TripoSRModel
 
 app = FastAPI()
 device = "cuda" if torch.cuda.is_available() else "cpu"
