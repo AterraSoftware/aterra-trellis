@@ -24,8 +24,19 @@ jobs:
         env:
           BEAM_TOKEN: ${{ secrets.BEAM_TOKEN }}
         run: |
+          # Mettre à jour pip et installer les dépendances
           pip install --upgrade pip
           pip install beam-client
           pip install -r requirements.txt
+
+          # Vérifier le contexte actuel et la présence de handler.py
+          echo "Répertoire courant :"
+          pwd
+          echo "Contenu du répertoire :"
+          ls -la
+
+          # Configurer Beam
           beam configure default --token $BEAM_TOKEN
+
+          # Déployer l'application
           beam deploy handler:app
