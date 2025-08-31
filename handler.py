@@ -1,5 +1,7 @@
 from fastapi import FastAPI, UploadFile
 from io import BytesIO
+import os
+import sys  # <-- ajouter ceci
 import torch
 import numpy as np
 import open3d as o3d
