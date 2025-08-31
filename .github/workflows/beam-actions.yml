@@ -1,0 +1,31 @@
+name: aterra-trellis
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set environment variables
+        run: |
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            echo "BEAM_DEPLOY_ENV=prod" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == 'refs/heads/staging' ]]; then
+            echo "BEAM_DEPLOY_ENV=staging" >> $GITHUB_ENV
+          fi
+
+      - name: Authenticate and deploy to Beam
+        env:
+          BEAM_TOKEN: ${{ secrets.BEAM_TOKEN }}
+        run: |
+          pip install --upgrade pip
+          pip install beam-client
+          pip install fastapi
+          beam configure default --token $BEAM_TOKEN
+          beam deploy handler.py:app
