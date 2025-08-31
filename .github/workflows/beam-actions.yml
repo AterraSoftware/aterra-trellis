@@ -26,6 +26,6 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install beam-client
-          pip install fastapi
+          pip install -r requirements.txt
           beam configure default --token $BEAM_TOKEN
           beam deploy handler.py:app
