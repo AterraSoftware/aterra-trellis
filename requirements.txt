@@ -1,5 +1,5 @@
 fastapi
 uvicorn
-Pillow
 torch
-trellis
+Pillow
+trellis==0.7a2  # version exacte compatible Python 3.9
