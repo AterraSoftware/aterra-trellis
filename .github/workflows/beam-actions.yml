@@ -1,4 +1,4 @@
-name: aterra-trellis
+name: Deploy to Beam
 
 on:
   push:
