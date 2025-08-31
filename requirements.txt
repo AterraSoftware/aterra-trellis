@@ -10,3 +10,4 @@ gradio
 xatlas==0.0.9
 moderngl==5.10.0
 torch
+open3d
