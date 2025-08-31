@@ -1,20 +1,18 @@
 from fastapi import FastAPI, UploadFile
 from io import BytesIO
-import os
 import torch
 import numpy as np
 import open3d as o3d
+from PIL import Image
 
-# Import depuis le repo SPAR3D (installer depuis GitHub dans requirements.txt)
-from stable_point_aware_3d.spar3d.model import SPAR3DModel
+# Import du modèle TripoSR
+from triposr.model import TripoSRModel  # à adapter selon le repo exact
 
 app = FastAPI()
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-os.environ["SPCONV_ALGO"] = "native"  # Optionnel mais recommandé
-
-# Charger le modèle SPAR3D depuis le repo ou checkpoint
-model = SPAR3DModel.from_pretrained("Stability-AI/stable-point-aware-3d")  # repo GitHub
+# Charger le modèle TripoSR depuis un checkpoint ou repo
+model = TripoSRModel.from_pretrained("VAST-AI-Research/TripoSR")  # vérifier le nom exact
 model.to(device)
 model.eval()
 
@@ -22,16 +20,23 @@ model.eval()
 async def generate3d(file: UploadFile):
     # Charger l'image depuis la requête
     img_bytes = await file.read()
-    img_o3d = o3d.io.read_image(BytesIO(img_bytes))  # Open3D Image
-    img_np = np.asarray(img_o3d)  # Convertir en numpy array si nécessaire par le modèle
-    img_tensor = torch.from_numpy(img_np).unsqueeze(0).to(device)  # Ajouter batch dim
+    img = Image.open(BytesIO(img_bytes)).convert("RGB")
+    img_np = np.array(img).astype(np.float32) / 255.0  # Normalisation
+    img_tensor = torch.tensor(img_np).permute(2, 0, 1).unsqueeze(0).to(device)  # (1,C,H,W)
 
     # Exécution du modèle
     with torch.no_grad():
-        mesh_output = model(img_tensor)  # adapter selon le forward exact de SPAR3D
+        mesh_output = model(img_tensor)  # Adapter selon le forward exact de TripoSR
 
     # Sauvegarde temporaire du mesh
     tmp_path = "/tmp/output.ply"
-    o3d.io.write_triangle_mesh(tmp_path, mesh_output)
+    if isinstance(mesh_output, o3d.geometry.TriangleMesh):
+        o3d.io.write_triangle_mesh(tmp_path, mesh_output)
+    else:
+        # si le modèle renvoie un dict avec vertices/faces
+        mesh = o3d.geometry.TriangleMesh()
+        mesh.vertices = o3d.utility.Vector3dVector(mesh_output['vertices'])
+        mesh.triangles = o3d.utility.Vector3iVector(mesh_output['faces'])
+        o3d.io.write_triangle_mesh(tmp_path, mesh)
 
     return {"mesh_path": tmp_path}
